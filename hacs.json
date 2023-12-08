@@ -1,5 +1,6 @@
 {
     "name": "ICA shopping list",
     "render_readme": true,
+    "iot_class": "Cloud Polling",
     "country": "SE"
 }

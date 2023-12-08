@@ -6,5 +6,6 @@
     "documentation": "https://github.com/dennisgranasen/ha-ica-todo",
     "iot_class": "cloud_polling",
     "loggers": ["ica"],
-    "requirements": []
+    "requirements": [],
+    "version": "0.0.1"
   }
