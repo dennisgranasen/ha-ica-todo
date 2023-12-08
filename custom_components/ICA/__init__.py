@@ -4,15 +4,14 @@ import datetime
 import logging
 
 # from todoist_api_python.api_async import TodoistAPIAsync
-from icaapi_async import IcaAPIAsync
-from coordinator import IcaCoordinator
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
 
+from .icaapi_async import IcaAPIAsync
+from .coordinator import IcaCoordinator
 from .const import DOMAIN
-# from .coordinator import TodoistCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

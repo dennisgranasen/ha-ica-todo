@@ -5,13 +5,13 @@ import logging
 from typing import Any
 
 from requests.exceptions import HTTPError
-from icaapi_async import IcaAPIAsync
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_ID, CONF_PIN
 from homeassistant.data_entry_flow import FlowResult
 
+from .icaapi_async import IcaAPIAsync
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

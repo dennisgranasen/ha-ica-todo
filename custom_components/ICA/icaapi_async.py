@@ -1,8 +1,8 @@
 import requests
 import asyncio
 
-from icaapi import IcaAPI
-from icatypes import IcaShoppingList, IcaStore, IcaOffer, IcaProductCategory
+from .icaapi import IcaAPI
+from .icatypes import IcaShoppingList, IcaStore, IcaOffer, IcaProductCategory
 
 
 async def run_async(func):
