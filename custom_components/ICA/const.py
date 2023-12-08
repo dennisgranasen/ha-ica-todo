@@ -31,10 +31,7 @@ REMINDER_DATE_STRING: Final = "reminder_date_string"
 # Service Call: The language of REMINDER_DATE_STRING
 REMINDER_DATE_LANG: Final = "reminder_date_lang"
 # Service Call: The available options of DUE_DATE_LANG
-DUE_DATE_VALID_LANGS: Final = [
-    "en",
-    "sv"
-]
+DUE_DATE_VALID_LANGS: Final = ["en", "sv"]
 # Attribute: When is this task due?
 # Service Call: When is this task due?
 DUE_DATE: Final = "due_date"
@@ -81,7 +78,7 @@ SERVICE_NEW_TASK: Final = "new_task"
 
 """Constants for ICA shopping list"""
 
-DOMAIN: Final = "icashopping"
+DOMAIN: Final = "ica"
 CONF_USERNAME: Final = "personal id"
 CONF_PASSWORD: Final = "pin code"
 AUTH_TICKET: Final = "AuthenticationTicket"
@@ -91,7 +88,7 @@ ITEM_LIST: Final = "Rows"
 ITEM_NAME: Final = "ProductName"
 IS_CHECKED: Final = "IsStrikedOver"
 
-BASE_URL: Final = "https://handla.api.ica.se/api/"
+BASE_URL: Final = "https://handla.api.ica.se/api"
 
 AUTH_ENDPOINT: Final = "login"
 MY_LISTS_ENDPOINT: Final = "user/offlineshoppinglists"
@@ -101,7 +98,7 @@ MY_CARDS_ENDPOINT: Final = "user/cardaccounts"
 MY_BONUS_ENDPOINT: Final = "user/minbonustransaction"
 MY_STORES_ENDPOINT: Final = "user/stores"
 MY_RECIPES_ENDPOINT: Final = "user/recipes"
-MY_COMMON_ARTICLES_ENDPOINT: Final = "user/commonarticles/{}{}"
+MY_COMMON_ARTICLES_ENDPOINT: Final = "user/commonarticles"
 STORE_ENDPOINT: Final = "stores/{}"
 STORE_SEARCH_ENDPOINT: Final = "stores/search?Filters&Phrase={}"
 OFFERS_ENDPOINT: Final = "offers?Stores={}"

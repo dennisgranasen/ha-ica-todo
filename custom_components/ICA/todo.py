@@ -20,20 +20,19 @@ from .const import DOMAIN
 from .coordinator import IcaCoordinator
 from .icatypes import IcaShoppingList
 
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Todoist todo platform config entry."""
+    """Set up the ICA shopping list platform config entry."""
     coordinator: IcaCoordinator = hass.data[DOMAIN][entry.entry_id]
-    shopping_lists: list[IcaShoppingList] = await coordinator.async_get_shopping_lists()    
+    shopping_lists: list[IcaShoppingList] = await coordinator.async_get_shopping_lists()
     async_add_entities(
-        TodoistTodoListEntity(coordinator, entry.entry_id, 
-                              shopping_list.id, shopping_list.name)
+        IcaShoppingListEntity(
+            coordinator, entry.entry_id, shopping_list["Id"], shopping_list["Title"]
+        )
         for shopping_list in shopping_lists
     )
-
-    x = IcaShoppingList()
-    
 
 
 def _task_api_data(item: TodoItem) -> dict[str, Any]:
@@ -54,95 +53,112 @@ def _task_api_data(item: TodoItem) -> dict[str, Any]:
     return item_data
 
 
-class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntity):
-    """A Todoist TodoListEntity."""
+class IcaShoppingListEntity(CoordinatorEntity[IcaCoordinator], TodoListEntity):
+    """A ICA shopping list TodoListEntity."""
 
     _attr_supported_features = (
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.DELETE_TODO_ITEM
-        | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
-        | TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
-        | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
+        | TodoListEntityFeature.MOVE_TODO_ITEM
     )
 
     def __init__(
         self,
-        coordinator: TodoistCoordinator,
+        coordinator: IcaCoordinator,
         config_entry_id: str,
-        project_id: str,
-        project_name: str,
+        shopping_list_id: str,
+        shopping_list_name: str,
     ) -> None:
-        """Initialize TodoistTodoListEntity."""
+        """Initialize IcaShoppingListEntity."""
         super().__init__(coordinator=coordinator)
-        self._project_id = project_id
-        self._attr_unique_id = f"{config_entry_id}-{project_id}"
-        self._attr_name = project_name
+        self._project_id = shopping_list_id
+        self._attr_unique_id = f"{config_entry_id}-{shopping_list_id}"
+        self._attr_name = shopping_list_name
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.coordinator.data is None:
-            self._attr_todo_items = None
-        else:
-            items = []
-            for task in self.coordinator.data:
-                if task.project_id != self._project_id:
-                    continue
-                if task.parent_id is not None:
-                    # Filter out sub-tasks until they are supported by the UI.
-                    continue
-                if task.is_completed:
+
+        shopping_list = self.coordinator.get_shopping_list(self._project_id)
+        items = []
+        for task in shopping_list["Rows"]:
+            if "SourceId" in task and task["SourceId"] == -1:
+                items.append(
+                    TodoItem(
+                        summary=task["ProductName"],
+                        uid=hash(task["ProductName"]),
+                        status=TodoItemStatus.NEEDS_ACTION,
+                        description="Tillagt från Home Assistant",
+                    )
+                )
+            else:
+                if task["IsStrikedOver"]:
                     status = TodoItemStatus.COMPLETED
                 else:
                     status = TodoItemStatus.NEEDS_ACTION
-                due: datetime.date | datetime.datetime | None = None
-                if task_due := task.due:
-                    if task_due.datetime:
-                        due = dt_util.as_local(
-                            datetime.datetime.fromisoformat(task_due.datetime)
-                        )
-                    elif task_due.date:
-                        due = datetime.date.fromisoformat(task_due.date)
                 items.append(
                     TodoItem(
-                        summary=task.content,
-                        uid=task.id,
+                        summary=task["ProductName"],
+                        uid=task["OfflineId"],
                         status=status,
-                        due=due,
-                        description=task.description or None,  # Don't use empty string
+                        description="Whatever",
                     )
                 )
-            self._attr_todo_items = items
+        self._attr_todo_items = items
         super()._handle_coordinator_update()
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Create a To-do item."""
         if item.status != TodoItemStatus.NEEDS_ACTION:
             raise ValueError("Only active tasks may be created.")
-        await self.coordinator.api.add_task(
-            **_task_api_data(item),
-            project_id=self._project_id,
+        articleGroup = self.coordinator.get_article_group(item.summary)
+        shopping_list = self.coordinator.get_shopping_list(self._project_id)
+
+        stuff = {
+            "ProductName": item.summary,
+            "SourceId": -1,
+            "IsStrikedOver": False,
+            "ArticleGroupId": articleGroup,
+        }
+        if "CreatedRows" not in shopping_list:
+            shopping_list["CreatedRows"] = []
+        shopping_list["CreatedRows"].append(stuff)
+
+        shopping_list["LatestChange"] = (
+            datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
         )
+        await self.coordinator.api.sync_shopping_list(shopping_list)
         await self.coordinator.async_refresh()
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a To-do item."""
-        uid: str = cast(str, item.uid)
-        if update_data := _task_api_data(item):
-            await self.coordinator.api.update_task(task_id=uid, **update_data)
-        if item.status is not None:
-            if item.status == TodoItemStatus.COMPLETED:
-                await self.coordinator.api.close_task(task_id=uid)
-            else:
-                await self.coordinator.api.reopen_task(task_id=uid)
+        shopping_list = self.coordinator.get_shopping_list(self._project_id)
+        await self.coordinator.api.sync_shopping_list(shopping_list)
+
+        # if item.status is not None:
+        #    if item.status == TodoItemStatus.COMPLETED:
+        #        await self.coordinator.api.close_task(task_id=uid)
+        #    else:
+        #        await self.coordinator.api.reopen_task(task_id=uid)
         await self.coordinator.async_refresh()
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete a To-do item."""
-        await asyncio.gather(
-            *[self.coordinator.api.delete_task(task_id=uid) for uid in uids]
-        )
+        # await asyncio.gather(
+        #     *[self.coordinator.api.remove_from_list(task_id=uid) for uid in uids]
+        # )
+        shopping_list = self.coordinator.get_shopping_list(self._project_id)
+        await self.coordinator.api.sync_shopping_list(shopping_list)
+        await self.coordinator.async_refresh()
+
+    async def async_move_todo_item(self, uid: str, previous_uid: str | None) -> None:
+        """Move a To-do item."""
+        # await asyncio.gather(
+        #     *[self.coordinator.api.remove_from_list(task_id=uid) for uid in uids]
+        # )
+        shopping_list = self.coordinator.get_shopping_list(self._project_id)
+        await self.coordinator.api.sync_shopping_list(shopping_list)
         await self.coordinator.async_refresh()
 
     async def async_added_to_hass(self) -> None:

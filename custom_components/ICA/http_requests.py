@@ -31,7 +31,9 @@ def get(
     auth_key: str | None = None,
     params: Dict[str, Any] | None = None,
 ):
-    response = session.get(url, params=params, headers=create_headers(auth_key=auth_key))
+    response = session.get(
+        url, params=params, headers=create_headers(auth_key=auth_key)
+    )
 
     if response.status_code == 200:
         return response.json()
