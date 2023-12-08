@@ -18,7 +18,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import IcaCoordinator
-from .types import IcaShoppingList
+from .icatypes import IcaShoppingList
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback

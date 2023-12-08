@@ -8,6 +8,7 @@ CONTENT_TYPE = ("Content-Type", "application/json; charset=utf-8")
 AUTHORIZATION = (AUTH_TICKET, "%s")
 X_REQUEST_ID = ("X-Request-Id", "%s")
 
+
 def create_headers(
     auth_key: str | None = None,
     with_content: bool = False,

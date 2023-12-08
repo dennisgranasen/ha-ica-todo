@@ -24,7 +24,7 @@ from .const import (
     RANDOM_RECIPES_ENDPOINT,
     MY_COMMON_ARTICLES_ENDPOINT
 )
-from icatypes import IcaStore, IcaOffer, IcaShoppingList, IcaProductCategory
+from .icatypes import IcaStore, IcaOffer, IcaShoppingList, IcaProductCategory
 
 def get_rest_url(endpoint: str):
     return '/'.join([BASE_URL, endpoint])
