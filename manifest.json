@@ -1,0 +1,10 @@
+{
+    "domain": "ica",
+    "name": "ICA",
+    "codeowners": ["@dennisgranasen"],
+    "config_flow": true,
+    "documentation": "https://github.com/dennisgranasen/ha-ica-todo",
+    "iot_class": "cloud_polling",
+    "loggers": ["ica"],
+    "requirements": []
+  }
